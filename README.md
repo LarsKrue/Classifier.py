@@ -1,2 +1,2 @@
 # Classifier.py
-Udacity projetc
+Udacity project
