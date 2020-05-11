@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # */AIPND-revision/intropyproject-classify-pet-images/classify_images.py
 #
-# PROGRAMMER: Lars Krüger
+# PROGRAMMER:
 # DATE CREATED:
 # REVISED DATE:
 # PURPOSE: Create a function classify_images that uses the classifier function
@@ -103,4 +103,7 @@ def classify_images(images_dir, results_dic, model):
            #print("{} ist nicht in {} enthalten".format(model_label, value))
        d[key] = [value, model_label, correct_identified]   
     
-    return(d)
+    return(d)   
+
+
+
