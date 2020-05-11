@@ -80,7 +80,7 @@ def adjust_results4_isadog(results_dic, dogfile):
     dog_name_set = set(dog_name_list)
     for keys, values in results_dic.items():
         pic_label_set = {values[0]}
-        enthalten = pic_label_set.issubset(dog_name_set)
+        enthalten = pic_label_set.issubset(dog_name_set) # bolen value (is contained?)
         if enthalten == True:
             dog_identified = 1
         else:

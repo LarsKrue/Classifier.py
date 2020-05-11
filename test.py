@@ -6,20 +6,26 @@ Created on Sun May 10 19:20:03 2020
 """
 
 
-with open('dognames.txt') as f:
-        dog_name_list = [line for line in f]
-for i in range(len(dog_name_list)):
-    dog_name_list[i]=dog_name_list[i].strip("\n")
-    print(dog_name_list)
-    print(type(dog_name_list))
-    print(len(dog_name_list))
-    dog_name_set = set(dog_name_list)
-    pet_label = str("basenji")
-    pet_label_set = {pet_label}
-    print("Pet Set", pet_label_set)
-    print("Dog Set", dog_name_set)
-    enthalten = pet_label_set.issubset(dog_name_set)
-    if enthalten == True:
-        print("enthalten")
-    else:
-        print("{} ist nicht enthalten".format(pet_label))
+import argparse
+
+# TODO 1: Define get_input_args function below please be certain to replace None
+#       in the return statement with parser.parse_args() parsed argument 
+#       collection that you created with this function
+    
+
+   
+# Create Parse using ArgumentParser
+parser = argparse.ArgumentParser(description="Parsen von 3 User-Inputs", prog="Dog Classifier")
+# Create 3 command line arguments as mentioned above using add_argument() from ArguementParser method
+parser.add_argument('--dir', type = str, default='pet_images/', 
+                    help='path to folder of images')
+parser.add_argument('--arch',type = str, default = 'vgg', 
+                    help='Type of Algorithm')
+parser.add_argument('--dogfile', default = 'dognames.txt', help='dog labels') 
+
+in_arg = parser.parse_args() 
+print(in_arg.dir)
+print(in_arg.arch)
+print(in_arg.dogfile)
+#return (in_arg)
+    

@@ -30,7 +30,9 @@
 #       below by the function definition of the print_results function. 
 #       Notice that this function doesn't to return anything because it  
 #       prints a summary of the results using results_dic and results_stats_dic
-# 
+import time 
+import _pickle as pickle
+
 def print_results(results_dic, results_stats_dic, model, 
                   print_incorrect_dogs = False, print_incorrect_breed = False):
     """
@@ -75,7 +77,18 @@ def print_results(results_dic, results_stats_dic, model,
     # The results statistics dictionary as results_stats_dic within 
     # print_results function and results_stats for the function call within main
     print("------------------------------------------------------------------")
-    print("Die Statistiken (Dict): \n",results_stats_dic)
+    print("Number of images: {}\n".format(results_stats_dic["n_images"]))
+    print("Number of dog images: {}\n".format(results_stats_dic["n_dogs_img"]))
+    print("Number of not-dog images: {}\n".format(results_stats_dic["n_not_dogs_img"]))
+    print("Number of total matches: {}\n".format(results_stats_dic["n_match"]))
+    print("Number of correct dog matches: {}\n".format(results_stats_dic["n_correct_dogs"]))
+    print("Number of correct dog breed matches: {}\n".format(results_stats_dic["n_correct_breed"]))
+    print("Number of correct not-dog matches: {}\n".format(results_stats_dic["n_correct_notdogs"]))
+    print("Percentage of correct matches: {}\n".format(results_stats_dic["pct_match"]))
+    print("Percentage of correct dog matches: {}\n".format(results_stats_dic["pct_correct_dogs"]))
+    print("Percentage of correct dog breed matches: {}\n".format(results_stats_dic["pct_correct_breed"]))
+    print("Percentage of correct not-dog matches: {}\n".format(results_stats_dic["pct_correct_notdogs"]))
+    print("------------------------------------------------------------------")
     
     #Prints Incorrectly Classified Breeds as print_incorrect_breed within
     #print_results function and set as either boolean value True or 
@@ -95,8 +108,6 @@ def print_results(results_dic, results_stats_dic, model,
     if print_incorrect_dogs == False:
         if (values[4]==0) and (values[3]==1): #pet_label is dog, class_label isnot dog
             print("Incorrected classified Dog - File: {}\n, Pet Label: {}\n, Class label: {}\n".format(keys, values[0], values[1]))
-    
-    
     
     return None
                 

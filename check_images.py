@@ -43,35 +43,34 @@ from print_results import print_results
 def main():
     
     #TODO 0 ------------------------------------------------------------------
-    
-    print("3 Eingaben")
     start_time = time.time() 
     
     # Todo 1
-    in_arg = get_input_args() 
-    print(in_arg)
-    #check_command_line_arguments(in_arg)
+    in_arg = get_input_args()
+    check_command_line_arguments(in_arg)
+    
+    
     
     #TODO 2
     results_dic = get_pet_labels(in_arg.dir)
-    print("Results_dic", results_dic) 
+    
     #TODO 3
     results = classify_images(in_arg.dir, results_dic, in_arg.arch) #updated Dict
     
-    print("neu Dict", results)   
-    print("neu Dict.keys", results.keys())
     
     #TODO 4
     results_dic= adjust_results4_isadog(results, in_arg.dogfile)
-    print(results_dic)
+    
     
     # TODO 5
     results_stats = calculates_results_stats(results) 
-    print(results_stats)
+    
     
     # TODO 6
-    print_results(results_dic, results_stats, in_arg.arch, False, False) 
+    print_results(results_dic, results_stats, in_arg.arch, True, True) 
     
+    
+    #TODO 0
     end_time = time.time()
     tot_time = end_time - start_time 
     print("\n** Total Elapsed Runtime:",

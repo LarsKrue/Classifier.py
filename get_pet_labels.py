@@ -46,13 +46,13 @@ def get_pet_labels(image_dir):
    # return None
     
     #image_dir = "
-    print("Der Inhalt des Verzeichnesses {}\n".format(image_dir))
-    hunde_name = []
-    results_dic = {}
-    inhalt_ver = os.listdir(image_dir)
+    #print("Der Inhalt des Verzeichnesses {}\n".format(image_dir))
+    hunde_name = [] # list of dog labels
+    results_dic = {} # dictionary zipped from file_names & dog_label
+    inhalt_ver = os.listdir(image_dir) #content of directory'
    
-    for inhalt in inhalt_ver:
-        #print(inhalt)
+    for inhalt in inhalt_ver: # inhalt = content
+       
         hunde_name.append(inhalt.lower().replace(".jpg", "").strip("_0123456789").replace("_", " "))
     #print(" \n", inhalt_ver)
     results_dic = dict((zip(inhalt_ver,hunde_name)))
