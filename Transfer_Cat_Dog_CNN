@@ -1,0 +1,234 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon May 25 19:42:06 2020
+
+Transfer-Learning of pretrained CNNs
+
+
+@author: Lars Krüger
+"""
+# identify dog photos from the Kaggle dogs vs cats dataset
+
+from matplotlib.image import imread
+import matplotlib.pyplot as plt
+
+import torch as tr
+import torch.nn.functional as F
+from torch import nn
+from torchvision import datasets, transforms, models
+from torch import optim
+from collections import OrderedDict
+
+import time
+import numpy as np
+import helpers
+
+
+device = tr.device("cuda:0" if tr.cuda.is_available() else "cpu")
+print("Device used for computations: {}".format(device))
+#---------------------------------------------------------------------------
+start_time = time.time() 
+#-----------------------------------------------------------------------------
+
+image_height = 250
+crop = 224
+angle_rot = 30
+
+# Define a transform pipeline to preprocess image data train
+train_transform = transforms.Compose([transforms.RandomRotation(angle_rot),# returns PIL image
+                                transforms.RandomResizedCrop(crop),
+                                transforms.ToTensor(), # returns tensor
+                                transforms.Normalize([0.485,0.456,0.406],[0.229,0.224,0.225]), # expects tensor                                
+                                ])
+
+# Define a transform pipeline to preprocess image data test
+test_transform = transforms.Compose([transforms.Resize(crop),# returns PIL image
+                                transforms.CenterCrop(crop), # returns PIL image
+                                transforms.ToTensor(), # returns tensor
+                                transforms.Normalize([0.485,0.456,0.406],[0.229,0.224,0.225]), # expects tensor                                
+                                ])
+
+
+
+# Load the training data into loader object
+train_set = datasets.ImageFolder(root="img/train/", transform=train_transform)
+train_loader = tr.utils.data.DataLoader(train_set, batch_size=64, shuffle=True)
+
+# Load the test data into loader object
+test_set = datasets.ImageFolder(root="img/test/", transform=test_transform)
+test_loader = tr.utils.data.DataLoader(test_set, batch_size=64, shuffle=True)
+
+# load pretrained network
+
+my_network = models.resnet50(pretrained=True) 
+# pretrained network: two components: features and classifier / classifiert to be trained new to new taks /data set
+print(my_network)
+
+
+#----------------------------- New Classifier --------------------------------
+
+# Freeze paramters so backpropagation wont update them 
+for paramet in my_network.parameters():
+    paramet.requires_grad = False
+    
+
+# Design of new Classifer Network
+input_units = 2048 # as the original classifier / final layer
+hidden_units = [500] # only one hidden layer
+output_units = 2 # new configuration
+
+
+classifier = nn.Sequential(OrderedDict([
+                          ("Layer 1", nn.Linear(input_units, hidden_units[0])),
+                          ("ReLu", nn.ReLU()),
+                          ("Layer 2", nn.Linear(hidden_units[0], output_units)),
+                          ("Output", nn.LogSoftmax(dim=1))
+                          ]))
+
+#Assignment of new classifeir steup to network, but yet untrained
+my_network.fc = classifier
+
+
+# Define loss function called criterion
+criterion = nn.NLLLoss() # 
+
+# OTrain only classifier
+optimizer = optim.Adam(my_network.fc.parameters(), lr=0.03)
+
+
+#--------------------------- Training NN -------------------------------------
+
+
+epochs = 3
+steps = 0
+train_losses, test_losses, accuracy_list = [], [], []
+
+# CUDA only for forward & backpropagation
+# Move network to Cuda
+my_network.to(device) 
+
+for loop in range(epochs):
+    running_loss = 0
+    print("Start Training")
+   
+    #-----------------------Training-Forward Pass----------------------------------
+   
+    for images, labels in train_loader:
+        
+        # Move data to cuda if available
+        images = images.to(device)
+        labels = labels.to(device)
+        
+        # clear gradients
+        optimizer.zero_grad()
+        
+        # Flatten MNIST images 
+        #images = images.view(images.shape[0], -1)
+        
+        # Probability Distribution  / output
+        logps = my_network.forward(images)
+        
+        # adjustment
+        #logps = tr.squeeze(logps)
+        #labels = labels.float()
+        
+        
+        #Loss Function
+        loss = criterion(logps, labels)
+        running_loss += loss.item()
+        
+        # Backward pass / Back Propagation
+        loss.backward()
+        
+        #Update Weights
+        optimizer.step()
+        
+    else: # for else loop, if no break / loop terminated normally, then Else
+        test_loss = 0
+        accuracy = 0
+        print("Start Test")
+        #-----------------------Test Cycle-----------------------------------
+        
+        # turn-off gradient calculation for validation, saves memory + computations
+        with tr.no_grad():
+            for images, labels in test_loader:
+                
+                # Move data to cuda if available
+                images = images.to(device)
+                labels = labels.to(device)
+                
+                # Forward Loop
+                logps = my_network(images)
+                test_loss += criterion(logps, labels)
+                
+                
+                # accuracy calculations
+                ps = tr.exp(logps)
+                top_p, top_class = ps.topk(1, dim=1)
+                equals = top_class == labels.view(*top_class.shape) # True where identity
+                accuracy += tr.mean(equals.type(tr.FloatTensor)).item()
+                
+        train_losses.append(running_loss/len(train_loader))
+        test_losses.append(test_loss/len(test_loader))
+        accuracy_list.append(accuracy/len(test_loader))
+        print("After Epoch {} of {}".format(loop+1, epochs))
+        print("Avg. Training Error {}".format(running_loss/len(train_loader)))
+        print("Avg. Test Error {}".format(test_loss/len(test_loader)))
+        print("Avg. Test Accuracy {}".format(accuracy/len(test_loader)))
+
+
+
+# Plot network performance
+plt.plot(range(0,epochs), train_losses, label='Training Error')
+plt.plot(range(0,epochs), test_losses, label='Test Error')
+plt.legend(frameon=False)
+plt.show()
+plt.bar(range(0,epochs),accuracy_list)
+plt.show()
+
+#-------------------------Save- network---------------------------------------
+
+# all architecture information needed!
+checkpoint = {"input_size": input_units,
+              "output_size" : output_units,              
+              "state_dict" : my_network.state_dict()
+              }
+tr.save(checkpoint ,"checkpoint_my_Network.pth")
+
+#------------------------------Time-------------------------------------------
+end_time = time.time()
+tot_time = end_time - start_time 
+print("\n** Total Elapsed Runtime:",
+      str(int((tot_time/3600)))+":"+str(int((tot_time%3600)/60))+":"
+      +str(int((tot_time%3600)%60)) )
+    
+#----------------------- Inference--------------------------------------------
+my_network = my_network.to("cpu")
+
+my_network.eval() # inference mode
+
+images, labels = next(iter(test_loader)) # shuffle enables random images
+images = images.to("cpu")
+labels = labels.to("cpu")
+
+#img = images[0]
+#img = img.view(3,244,244) # flatten image vector
+
+with tr.no_grad(): # no gradient calculation
+    logps = my_network.forward(images)
+    #ps = tr.exp(logps)
+
+
+#-----------------------------Plot--------------------------------------------
+ps = tr.exp(logps)
+print("ps after Exp", ps[0])
+img = images[0]
+ps = ps[0].tolist()
+print("ps list", ps)
+fig, (ax1, ax2) = plt.subplots(figsize=(6,9), ncols=2)
+ax1.imshow(img.resize_(1, 224, 224).numpy().squeeze())
+ax1.axis('off')
+ax2.barh(["Cat", "Dog"],ps)
+ax2.set_aspect(0.1)
+ax2.set_yticklabels(["Cat", "Dog"])
+ax2.set_title('Class Probability')
