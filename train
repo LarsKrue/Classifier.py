@@ -1,0 +1,38 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu May 28 11:45:04 2020
+
+Classifier Project Udacity 
+
+
+@author: Lars Krüger
+"""
+
+import json
+import torch as tr
+import time
+import numpy as np
+
+from torchvision import datasets, transforms
+from torch import optim
+
+#---------------------Load category names from .json file --------------------
+
+
+with open("cat_to_name.json", "r") as f:
+    cat_no_to_flower_name = json.load(f)
+    
+#print(cat_to_name.keys())
+print(cat_no_to_flower_name["102"])
+
+
+# --------------------- Mapping cat numbers to flower names-------------------
+
+labels = ["2","82", "16", "45", "65"] # need to be input from top-k prediction!
+category = []
+
+for label in labels:
+    print(cat_no_to_flower_name[label])
+    category.append(cat_no_to_flower_name[label])
+print("Liste: ", category)
+
